@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/ian/Desktop/trabalho_01/LocadoraDeVeiculos/LocadoraDeVeiculos.csproj": {}
+    "/Users/ian/Desktop/kuzco/psg-tads-2024-1-back-bd-YoshuJumpMaster/codigo/LocadoraDeVeiculos.csproj": {}
   },
   "projects": {
-    "/Users/ian/Desktop/trabalho_01/LocadoraDeVeiculos/LocadoraDeVeiculos.csproj": {
+    "/Users/ian/Desktop/kuzco/psg-tads-2024-1-back-bd-YoshuJumpMaster/codigo/LocadoraDeVeiculos.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/ian/Desktop/trabalho_01/LocadoraDeVeiculos/LocadoraDeVeiculos.csproj",
+        "projectUniqueName": "/Users/ian/Desktop/kuzco/psg-tads-2024-1-back-bd-YoshuJumpMaster/codigo/LocadoraDeVeiculos.csproj",
         "projectName": "LocadoraDeVeiculos",
-        "projectPath": "/Users/ian/Desktop/trabalho_01/LocadoraDeVeiculos/LocadoraDeVeiculos.csproj",
+        "projectPath": "/Users/ian/Desktop/kuzco/psg-tads-2024-1-back-bd-YoshuJumpMaster/codigo/LocadoraDeVeiculos.csproj",
         "packagesPath": "/Users/ian/.nuget/packages/",
-        "outputPath": "/Users/ian/Desktop/trabalho_01/LocadoraDeVeiculos/obj/",
+        "outputPath": "/Users/ian/Desktop/kuzco/psg-tads-2024-1-back-bd-YoshuJumpMaster/codigo/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/ian/.nuget/NuGet/NuGet.Config"

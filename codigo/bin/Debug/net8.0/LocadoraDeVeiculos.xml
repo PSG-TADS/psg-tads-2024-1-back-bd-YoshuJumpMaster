@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>LocadoraDeVeiculos</name>
+    </assembly>
+    <members>
+        <member name="T:LocadoraDeVeiculos.Data.Migrations.CreateInitial">
+            <inheritdoc />
+        </member>
+        <member name="M:LocadoraDeVeiculos.Data.Migrations.CreateInitial.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:LocadoraDeVeiculos.Data.Migrations.CreateInitial.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:LocadoraDeVeiculos.Data.Migrations.CreateInitial.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:LocadoraDeVeiculos.Migrations.InitialCreate">
+            <inheritdoc />
+        </member>
+        <member name="M:LocadoraDeVeiculos.Migrations.InitialCreate.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:LocadoraDeVeiculos.Migrations.InitialCreate.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:LocadoraDeVeiculos.Migrations.InitialCreate.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+    </members>
+</doc>

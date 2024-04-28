@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "FJw/tb2eDM3V0l+JR8MXKNVID2qm8fJfbPvYWCEafR3ZqYYn5GjftsqJvElhXJHfhLVUoulrP4iYnlOfU5vamQ==",
+  "dgSpecHash": "SHItQFnLzhJehQgx9nxzQj6NH+57dhoDQCL+pVvj00SUQn0OpIYpcE4IfhhS72smXF54SsrOQDpxFWCHKP+ftQ==",
   "success": true,
-  "projectFilePath": "/Users/ian/Desktop/trabalho_01/LocadoraDeVeiculos/LocadoraDeVeiculos.csproj",
+  "projectFilePath": "/Users/ian/Desktop/kuzco/psg-tads-2024-1-back-bd-YoshuJumpMaster/codigo/LocadoraDeVeiculos.csproj",
   "expectedPackageFiles": [
     "/Users/ian/.nuget/packages/azure.core/1.35.0/azure.core.1.35.0.nupkg.sha512",
     "/Users/ian/.nuget/packages/azure.identity/1.10.3/azure.identity.1.10.3.nupkg.sha512",
