@@ -3,22 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recarga</title>
+    <title>Recarga de Saldo</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@500;1000&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
 <body>
+    <nav class="navbar navbar-light bg-light">
+        <a class="navbar-brand" href="index.html">
+            <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png"/>
+        </a>
+    </nav>
     <div class="container mt-5">
-        <h2>Recarga</h2>
+        <h2>Recarga de Saldo</h2>
         <form id="recargaForm">
             <div class="form-group">
                 <label for="valor">Valor:</label>
-                <input type="text" class="form-control" id="valor" required>
+                <input type="number" class="form-control" id="valor" required>
             </div>
-            <button type="submit" class="btn btn-primary">Recargar</button>
+            <button type="submit" class="btn btn-primary">Recarregar</button>
         </form>
-        <div id="errorMessages" class="error"></div>
+        <div id="errorMessages" class="error mt-3"></div>
     </div>
     <script src="js/recarga.js"></script>
 </body>

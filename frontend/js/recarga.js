@@ -15,18 +15,19 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({ valor: parseFloat(valor) })
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.message || 'Recarga falhou'); });
+            }
+            return response.json();
+        })
         .then(data => {
-
-            alert(data.Message);
+            alert(data.Message || 'Recarga realizada com sucesso!');
             window.location.reload();
-            
         })
         .catch(error => {
-
-            console.error('erro ', error);
+            console.error('Erro:', error);
             document.getElementById('errorMessages').innerText = 'Erro ao efetuar sua recarga =(';
-
         });
     });
 });
