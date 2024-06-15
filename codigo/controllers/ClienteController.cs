@@ -48,20 +48,13 @@ public class ClientesController : ControllerBase
 
         _context.Entry(cliente).State = EntityState.Modified;
 
-        try
-            {
-            await _context.SaveChangesAsync();
-            }
+        try{await _context.SaveChangesAsync();}
         catch (DbUpdateConcurrencyException)
             {
             if (!_context.Clientes.Any(e => e.ClienteId == id))
-                {
-                return NotFound();
-                }
+                { return NotFound(); }
             else
-                {
-                throw;
-                }
+                { throw; }
             }
 
         return NoContent();
@@ -71,10 +64,7 @@ public class ClientesController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var cliente = await _context.Clientes.FindAsync(id);
-        if (cliente == null)
-        {
-            return NotFound();
-        }
+        if (cliente == null) {return NotFound(); }
 
         _context.Clientes.Remove(cliente);
         await _context.SaveChangesAsync();

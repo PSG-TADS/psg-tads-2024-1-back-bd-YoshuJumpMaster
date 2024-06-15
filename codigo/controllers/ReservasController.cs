@@ -54,14 +54,9 @@ public class ReservasController : ControllerBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            if (!_context.Reservas.Any(e => e.ReservaId == id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
+            if (!_context.Reservas.Any(e => e.ReservaId == id)){
+                return NotFound(); }
+            else{throw; }
         }
 
         return NoContent();
