@@ -1,13 +1,10 @@
-using System.ComponentModel.DataAnnotations;
-namespace LocadoraDeVeiculos.Models
-{
 public class Veiculo
 {
-    [Key]
     public int VeiculoId { get; set; }
-    public string? Modelo { get; set; }
-    public string? Marca { get; set; }
-    public string? Placa { get; set; }
-    public string? Status { get; set; }
-}
+    public string Marca { get; set; } = string.Empty;
+    public string Modelo { get; set; } = string.Empty;
+    public string Placa { get; set; } = string.Empty;
+    public bool Status { get; set; }
+    
+    public ICollection<Reserva> Reservas { get; set; } = new List<Reserva>();
 }
