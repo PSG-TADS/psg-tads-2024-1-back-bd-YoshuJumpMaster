@@ -1,0 +1,190 @@
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    width: 100%;
+    height: 100vh;
+    font-family: 'Nunito Sans', sans-serif;
+    overflow-x: hidden;
+    background-color: #f8f9fa;
+}
+
+.navbar {
+    background-color: #FDB815;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 95px;
+}
+
+.navbar img {
+    height: 100px;
+    display: flex;
+    width: auto;
+    margin-top: -15px;
+    margin-left: -20px;
+}
+
+.btn-about {
+    background-color: #FDB815;
+    border: none;
+    color: black;
+    font-weight: bold;
+    margin-left: 20px;
+    cursor: pointer;
+    transition: color 0.3s, background-color 0.3s;
+}
+
+.btn-about:hover {
+    color: white;
+    background-color: #d1a71d;
+}
+
+.campo-busca {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 120px;
+}
+
+.campo-busca input[type="text"] {
+    padding: 10px 20px;
+    width: 300px;
+    border: 2px solid #FDB815;
+    border-radius: 10px;
+    outline: none;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.campo-busca input[type="text"]:focus {
+    border-color: #d1a71d;
+}
+
+.campo-busca button {
+    padding: 5px 10px;
+    border: 2px solid #FDB815;
+    background-color: #FDB815;
+    color: black;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.campo-busca button:hover {
+    background-color: #F2A516;
+    border-color: #F2A516;
+}
+
+.button-filter {
+    margin-left: 10px;
+    border: 2px solid #FDB815;
+    background-color: #FDB815;
+    color: black;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s, border-color 0.3s;
+    padding: 5px 10px;
+}
+
+.button-filter:hover {
+    background-color: #F2A516;
+    border-color: #F2A516;
+}
+
+.navbar-icons {
+    display: flex;
+    align-items: center;
+}
+
+#perfilBtn, #carrinhoBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    transition: color 0.3s;
+    color: black;
+}
+
+#perfilBtn .material-symbols-outlined,
+#carrinhoBtn .material-symbols-outlined,
+#filterBtn .material-symbols-outlined {
+    font-size: 24px;
+    color: black;
+    transition: color 0.3s;
+}
+
+#perfilBtn:hover .material-symbols-outlined,
+#perfilBtn:focus .material-symbols-outlined,
+#carrinhoBtn:hover .material-symbols-outlined,
+#carrinhoBtn:focus .material-symbols-outlined,
+#filterBtn:hover .material-symbols-outlined,
+#filterBtn:focus .material-symbols-outlined {
+    color: black;
+}
+
+.button-login {
+    background-color: #F2C029;
+    color: black;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.button-login:hover {
+    background-color: #FDB815;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: -2.5rem;
+    width: 100%;
+    padding: 7rem 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.btn-primary {
+    background-color: #FDB815;
+    border: none;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #d1a71d;
+}
+
+.error {
+    color: red;
+    margin-top: 1rem;
+}
+
+.saldo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+}
