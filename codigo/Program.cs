@@ -1,13 +1,17 @@
-using Microsoft.EntityFrameworkCore;
+using LocadoraDeVeiculos.Data;
 using LocadoraDeVeiculos.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
-using System.IO;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<LocadoraContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
+builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -18,39 +22,241 @@ builder.Services.AddSwaggerGen(c =>
     c.IncludeXmlComments(xmlPath);
 });
 
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+});
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
+    
+}
+else
+{
+    // ignora redirecionamento https por enquanto
 }
 
-app.UseHttpsRedirection();
+app.UseCors("AllowAllOrigins"); // Habilita CORS
+app.UseAuthorization();
 
-/// <summary>
-/// Obtém uma lista de todos os veículos.
-/// </summary>
-/// <returns>Uma lista de veículos.</returns>
-/// <response code="200">Se a lista de veículos for recuperada com sucesso.</response>
-app.MapGet("/veiculos", async (LocadoraContext context) =>
+app.MapControllers(); // Adiciona os controllers
+
+
+
+
+
+//registro
+app.MapPost("/api/auth/register", async (LocadoraContext context, [FromBody] RegisterModel model) =>
+{
+    var cliente = new Cliente
+    {
+        Nome = model.Username,
+        CPF = model.CPF
+    };
+
+    context.Clientes.Add(cliente);
+    await context.SaveChangesAsync();
+
+    return Results.Ok(new { Message = "Registration successful" });
+});
+
+
+
+
+
+
+// Login
+app.MapPost("/api/auth/login", (LocadoraContext context, [FromBody] LoginModel model) =>
+{
+    var user = context.Clientes.SingleOrDefault(u => u.Nome == model.Username);
+
+    if (user != null)
+    {
+        return Results.Ok(new { token = "Fake JWT Token", username = model.Username });
+    }
+    return Results.Unauthorized();
+});
+
+
+
+
+
+
+// Saldo
+app.MapGet("/api/saldo", (LocadoraContext context, HttpRequest request) =>
+{
+    var username = request.Headers["Username"].ToString();
+    var user = context.Clientes.SingleOrDefault(u => u.Nome == username);
+
+    if (user != null)
+    {
+      
+        var saldo = context.Pagamentos
+            .Where(p => context.Reservas.Any(r => r.ReservaId == p.ReservaId && r.ClienteId == user.ClienteId))
+            .Sum(p => p.Valor);
+        return Results.Ok(new { saldo });
+    }
+
+    return Results.Unauthorized();
+});
+
+
+
+
+
+
+
+
+
+// Recarga
+app.MapPost("/api/recarga", async (LocadoraContext context, [FromBody] RecargaModel model, HttpRequest request) =>
+{
+    var username = request.Headers["Username"].ToString();
+    var user = context.Clientes.SingleOrDefault(u => u.Nome == username);
+
+    if (user != null)
+    {
+       
+        var reserva = new Reserva
+        {
+            ClienteId = user.ClienteId,
+            DataInicio = DateTime.Now,
+            DataFim = DateTime.Now.AddDays(1),
+            VeiculoId = 1, // Veículo padrão
+            ValorTotal = model.Valor
+        };
+
+        context.Reservas.Add(reserva);
+        await context.SaveChangesAsync();
+
+        var pagamento = new Pagamento
+        {
+            ReservaId = reserva.ReservaId,
+            Valor = model.Valor,
+            Data = DateTime.Now
+        };
+
+        context.Pagamentos.Add(pagamento);
+        await context.SaveChangesAsync();
+
+        return Results.Ok(new { Message = "Recarga realizada com sucesso" });
+    }
+
+    return Results.Unauthorized();
+});
+
+
+
+
+
+
+
+
+
+
+
+//  Reserva
+app.MapGet("/api/reservas/cliente", (LocadoraContext context, HttpRequest request) =>
+{
+    var username = request.Headers["Username"].ToString();
+    var user = context.Clientes.SingleOrDefault(u => u.Nome == username);
+
+    if (user != null)
+    {
+        var reservas = context.Reservas
+            .Where(r => r.ClienteId == user.ClienteId)
+            .Select(r => new
+            {
+                r.ReservaId,
+                VeiculoModelo = r.Veiculo.Modelo,
+                r.ValorTotal
+            })
+            .ToList();
+
+        return Results.Ok(reservas);
+    }
+
+    return Results.Unauthorized();
+});
+
+
+
+
+
+// Pagamento
+app.MapPost("/api/pagamento", async (LocadoraContext context, HttpRequest request, [FromBody] PagamentoModel pagamentoModel) =>
+{
+    var username = request.Headers["Username"].ToString();
+    var user = context.Clientes.SingleOrDefault(u => u.Nome == username);
+
+    if (user != null)
+    {
+        var reserva = context.Reservas.SingleOrDefault(r => r.ReservaId == pagamentoModel.ReservaId && r.ClienteId == user.ClienteId);
+
+        if (reserva != null && pagamentoModel.Valor == reserva.ValorTotal)
+        {
+            // Calcular o saldo do cliente
+            var saldoAtual = context.Pagamentos
+                .Where(p => context.Reservas.Any(r => r.ReservaId == p.ReservaId && r.ClienteId == user.ClienteId))
+                .Sum(p => p.Valor);
+
+            if (saldoAtual >= pagamentoModel.Valor)
+            {
+                var pagamento = new Pagamento
+                {
+                    ReservaId = reserva.ReservaId,
+                    Valor = -pagamentoModel.Valor, // Deduzindo o valor
+                    Data = DateTime.Now
+                };
+
+                context.Pagamentos.Add(pagamento);
+                await context.SaveChangesAsync();
+                return Results.Ok(new { Message = "Pagamento realizado com sucesso!" });
+            }
+            else
+            {
+                return Results.BadRequest(new { Message = "Saldo insuficiente." });
+            }
+        }
+
+        return Results.BadRequest(new { Message = "Reserva não encontrada ou valor incorreto." });
+    }
+
+    return Results.Unauthorized();
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// veiculo
+app.MapGet("/api/veiculos", async (LocadoraContext context) =>
 {
     var veiculos = await context.Veiculos.ToListAsync();
     return Results.Ok(veiculos);
 });
 
-
-
-/// <summary>
-/// Obtém o véiculo com aquele ID.
-/// </summary>
-/// <param name="id">O ID do veículo a ser obtido.</param>
-/// <returns>Os detalhes do veículo.</returns>
-/// <response code="200">Retorna o veículo encontrado.</response>
-/// <response code="404">Se nenhum veículo for encontrado com aquele ID.</response>
-app.MapGet("/veiculos/{id}", async (LocadoraContext context, int id) =>
+app.MapGet("/api/veiculos/{id}", async (LocadoraContext context, int id) =>
 {
     var veiculo = await context.Veiculos.FindAsync(id);
     if (veiculo != null)
@@ -63,33 +269,14 @@ app.MapGet("/veiculos/{id}", async (LocadoraContext context, int id) =>
     }
 });
 
-
-/// <summary>
-/// Cria veículo.
-/// </summary>
-/// <param name="veiculo">O objeto veículo com este nome será criado.</param>
-/// <returns>O veículo criado.</returns>
-/// <response code="201"> veículo criado com sucesso.</response>
-
-app.MapPost("/veiculos", async (LocadoraContext context, Veiculo veiculo) =>
+app.MapPost("/api/veiculos", async (LocadoraContext context, Veiculo veiculo) =>
 {
     context.Veiculos.Add(veiculo);
     await context.SaveChangesAsync();
-    return Results.Created($"/veiculos/{veiculo.VeiculoId}", veiculo);
+    return Results.Created($"/api/veiculos/{veiculo.VeiculoId}", veiculo);
 });
 
-
-
-/// <summary>
-/// Atualiza veículo.
-/// </summary>
-/// <param name="id">ID do veículo a ser atualizado.</param>
-/// <param name="veiculoInput">dados atualizados do veículo.</param>
-/// <returns>Nenhum conteúdo, confirmando que o veículo foi atualizado.</returns>
-/// <response code="204">O veículo foi atualizado com sucesso.</response>
-/// <response code="404">Nenhum veículo encontrado com este ID.</response>
-
-app.MapPut("/veiculos/{id}", async (LocadoraContext context, int id, Veiculo veiculoInput) =>
+app.MapPut("/api/veiculos/{id}", async (LocadoraContext context, int id, Veiculo veiculoInput) =>
 {
     var veiculo = await context.Veiculos.FindAsync(id);
     if (veiculo == null)
@@ -105,16 +292,7 @@ app.MapPut("/veiculos/{id}", async (LocadoraContext context, int id, Veiculo vei
     return Results.NoContent();
 });
 
-
-
-/// <summary>
-/// Deleta veículo.
-/// </summary>
-/// <param name="id">O ID do veículo a ser deletado.</param>
-/// <returns>Nenhum conteúdo, confirmando que o veículo foi deletado.</returns>
-/// <response code="204"> veículo deletado com sucesso.</response>
-/// <response code="404">Nenhum veículo encontrado com esse ID.</response>
-app.MapDelete("/veiculos/{id}", async (LocadoraContext context, int id) =>
+app.MapDelete("/api/veiculos/{id}", async (LocadoraContext context, int id) =>
 {
     var veiculo = await context.Veiculos.FindAsync(id);
     if (veiculo == null)
@@ -128,26 +306,22 @@ app.MapDelete("/veiculos/{id}", async (LocadoraContext context, int id) =>
 
 
 
-/// <summary>
-/// Obtém todos os clientes armazenados.
-/// </summary>
-/// <returns>Uma lista de clientes.</returns>
-/// <response code="200">Retorna a lista de clientes.</response>
-app.MapGet("/clientes", async (LocadoraContext context) =>
+
+
+
+
+
+
+
+
+// cliente
+app.MapGet("/api/clientes", async (LocadoraContext context) =>
 {
     var clientes = await context.Clientes.ToListAsync();
     return Results.Ok(clientes);
 });
 
-
-/// <summary>
-/// Obtém o cliente com aquele ID.
-/// </summary>
-/// <param name="id">O ID do cliente.</param>
-/// <returns>Os detalhes do cliente.</returns>
-/// <response code="200">Retorna o cliente encontrado.</response>
-/// <response code="404">Se nenhum cliente para aquele ID.</response>
-app.MapGet("/clientes/{id}", async (LocadoraContext context, int id) =>
+app.MapGet("/api/clientes/{id}", async (LocadoraContext context, int id) =>
 {
     var cliente = await context.Clientes.FindAsync(id);
     if (cliente != null)
@@ -160,36 +334,14 @@ app.MapGet("/clientes/{id}", async (LocadoraContext context, int id) =>
     }
 });
 
-
-
-
-/// <summary>
-/// Cria cliente.
-/// </summary>
-/// <param name="cliente">dados do novo cliente.</param>
-/// <returns> Detalhes do cliente.</returns>
-/// <response code="201"> cliente criado.</response>
-app.MapPost("/clientes", async (LocadoraContext context, Cliente cliente) =>
+app.MapPost("/api/clientes", async (LocadoraContext context, Cliente cliente) =>
 {
     context.Clientes.Add(cliente);
     await context.SaveChangesAsync();
-    return Results.Created($"/clientes/{cliente.ClienteId}", cliente);
+    return Results.Created($"/api/clientes/{cliente.ClienteId}", cliente);
 });
 
-
-
-
-
-
-
-/// <summary>
-/// Atualiza um cliente .
-/// </summary>
-/// <param name="id"> ID do cliente a ser atualizado.</param>
-/// <param name="clienteInput"> dados atualizados do cliente </param>
-/// <response code="204"> cliente foi atualizado com sucesso </response>
-/// <response code="404"> nenhum cliente  encontrado para esse ID.</response>
-app.MapPut("/clientes/{id}", async (LocadoraContext context, int id, Cliente clienteInput) =>
+app.MapPut("/api/clientes/{id}", async (LocadoraContext context, int id, Cliente clienteInput) =>
 {
     var cliente = await context.Clientes.FindAsync(id);
     if (cliente == null)
@@ -203,15 +355,7 @@ app.MapPut("/clientes/{id}", async (LocadoraContext context, int id, Cliente cli
     return Results.NoContent();
 });
 
-
-
-/// <summary>
-/// Excluir cliente .
-/// </summary>
-/// <param name="id"> ID do cliente a ser excluído </param>
-/// <response code="204"> Cliente excluído com sucesso </response>
-/// <response code="404"> nenhum cliente corresponde esse ID</response>
-app.MapDelete("/clientes/{id}", async (LocadoraContext context, int id) =>
+app.MapDelete("/api/clientes/{id}", async (LocadoraContext context, int id) =>
 {
     var cliente = await context.Clientes.FindAsync(id);
     if (cliente == null)
@@ -225,28 +369,20 @@ app.MapDelete("/clientes/{id}", async (LocadoraContext context, int id) =>
 
 
 
-/// <summary>
-/// Obtém reservas armazenadas.
-/// </summary>
-/// <returns>Uma lista de reservas.</returns>
-/// <response code="200">Retorna a lista de reservas.</response>
-app.MapGet("/reservas", async (LocadoraContext context) =>
+
+
+
+
+
+
+// reserva
+app.MapGet("/api/reservas", async (LocadoraContext context) =>
 {
     var reservas = await context.Reservas.ToListAsync();
     return Results.Ok(reservas);
 });
 
-
-
-
-/// <summary>
-/// Obtém a reserva com aquele ID.
-/// </summary>
-/// <param name="id">O ID daquela reserva.</param>
-/// <returns>Os detalhes da reserva.</returns>
-/// <response code="200">Retorna a reserva encontrada.</response>
-/// <response code="404">Se nenhuma reserva armazenada corresponde com aquele ID.</response>
-app.MapGet("/reservas/{id}", async (LocadoraContext context, int id) =>
+app.MapGet("/api/reservas/{id}", async (LocadoraContext context, int id) =>
 {
     var reserva = await context.Reservas.FindAsync(id);
     if (reserva != null)
@@ -259,32 +395,14 @@ app.MapGet("/reservas/{id}", async (LocadoraContext context, int id) =>
     }
 });
 
-
-
-
-/// <summary>
-/// Cria reserva.
-/// </summary>
-/// <param name="reserva"> dados da reserva </param>
-/// <returns> detalhes da reserva </returns>
-/// <response code="201"> Retorna reserva criada </response>
-app.MapPost("/reservas", async (LocadoraContext context, Reserva reserva) =>
+app.MapPost("/api/reservas", async (LocadoraContext context, Reserva reserva) =>
 {
     context.Reservas.Add(reserva);
     await context.SaveChangesAsync();
-    return Results.Created($"/reservas/{reserva.ReservaId}", reserva);
+    return Results.Created($"/api/reservas/{reserva.ReservaId}", reserva);
 });
 
-
-
-/// <summary>
-/// Atualiza reserva .
-/// </summary>
-/// <param name="id"> ID da reserva a ser atualizada </param>
-/// <param name="reservaInput"> dados atualizados da reserva </param>
-/// <response code="204"> Reserva foi atualizada com sucesso </response>
-/// <response code="404"> nenhuma reserva encontrada com esse ID </response>
-app.MapPut("/reservas/{id}", async (LocadoraContext context, int id, Reserva reservaInput) =>
+app.MapPut("/api/reservas/{id}", async (LocadoraContext context, int id, Reserva reservaInput) =>
 {
     var reserva = await context.Reservas.FindAsync(id);
     if (reserva == null)
@@ -301,15 +419,7 @@ app.MapPut("/reservas/{id}", async (LocadoraContext context, int id, Reserva res
     return Results.NoContent();
 });
 
-
-
-/// <summary>
-/// Excluir reserva .
-/// </summary>
-/// <param name="id"> ID  da reserva para exluir </param>
-/// <response code="204"> reserva excluída com sucesso.</response>
-/// <response code="404"> nenhuma reserva corresponde esse ID</response>
-app.MapDelete("/reservas/{id}", async (LocadoraContext context, int id) =>
+app.MapDelete("/api/reservas/{id}", async (LocadoraContext context, int id) =>
 {
     var reserva = await context.Reservas.FindAsync(id);
     if (reserva == null)
@@ -317,6 +427,62 @@ app.MapDelete("/reservas/{id}", async (LocadoraContext context, int id) =>
         return Results.NotFound();
     }
     context.Reservas.Remove(reserva);
+    await context.SaveChangesAsync();
+    return Results.NoContent();
+});
+
+
+
+
+
+
+
+
+
+
+// pagamento
+app.MapGet("/api/pagamentos", async (LocadoraContext context) =>
+{
+    var pagamentos = await context.Pagamentos.ToListAsync();
+    return Results.Ok(pagamentos);
+});
+
+app.MapGet("/api/pagamentos/{id}", async (LocadoraContext context, int id) =>
+{
+    var pagamento = await context.Pagamentos.FindAsync(id);
+    return pagamento != null ? Results.Ok(pagamento) : Results.NotFound();
+});
+
+app.MapPost("/api/pagamentos", async (LocadoraContext context, Pagamento pagamento) =>
+{
+    context.Pagamentos.Add(pagamento);
+    await context.SaveChangesAsync();
+    return Results.Created($"/api/pagamentos/{pagamento.PagamentoId}", pagamento);
+});
+
+app.MapPut("/api/pagamentos/{id}", async (LocadoraContext context, int id, Pagamento pagamentoInput) =>
+{
+    var pagamento = await context.Pagamentos.FindAsync(id);
+    if (pagamento == null)
+    {
+        return Results.NotFound();
+    }
+    pagamento.ReservaId = pagamentoInput.ReservaId;
+    pagamento.Valor = pagamentoInput.Valor;
+    pagamento.Data = pagamentoInput.Data;
+
+    await context.SaveChangesAsync();
+    return Results.NoContent();
+});
+
+app.MapDelete("/api/pagamentos/{id}", async (LocadoraContext context, int id) =>
+{
+    var pagamento = await context.Pagamentos.FindAsync(id);
+    if (pagamento == null)
+    {
+        return Results.NotFound();
+    }
+    context.Pagamentos.Remove(pagamento);
     await context.SaveChangesAsync();
     return Results.NoContent();
 });
